@@ -17,26 +17,16 @@ This stack needs [docker](https://www.docker.com/) and [docker-compose](https://
 ## Installing
 
 1. Clone this repository
-
 2. Modify configuration in the *.env* file
-
-3. Run docker-compose:
-
-    ```sh
-    docker-compose up -d --build
-    ```
-
-4. Go inside container:
-
-    ```sh
-    docker exec -it app bash
-    ```
-
-5. Now your make to install the new Symfony project:
-
-    ```sh
-    symfony new --full my_project
-    ```
+3. Create new or copy your project in */app* dir
+4. Run docker-compose:
+   ```sh
+   docker-compose up -d --build
+   ```
+5. Don't forget add your domain-name to */etc/hosts*. For example:
+   ```sh
+   127.0.0.1       symfony.local
+   ```
 
 ## How does it work?
 
