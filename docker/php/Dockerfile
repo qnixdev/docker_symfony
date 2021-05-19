@@ -36,7 +36,6 @@ RUN set -ex; \
     docker-php-ext-install \
         gd \
         intl \
-        opcache \
         pdo_pgsql \
         zip \
     ; \
@@ -51,14 +50,11 @@ RUN set -ex; \
     apk del .build-deps
 
 # Configure PHP
-# see https://secure.php.net/manual/en/opcache.installation.php
-COPY opcache.ini /usr/local/etc/php/conf.d/ext-opcache.ini
-
 RUN { \
         echo 'memory_limit=256M'; \
         echo 'upload_max_filesize=64M'; \
         echo 'post_max_size=128M'; \
-    } > /usr/local/etc/php/conf.d/ext-recommended.ini
+    } > /usr/local/etc/php/conf.d/local.ini
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin/ --filename=composer
