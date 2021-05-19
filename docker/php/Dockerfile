@@ -13,8 +13,10 @@ RUN set -ex; \
     # Install libraries
     apk add --no-cache --virtual .build-deps \
         freetype-dev \
+        libgcrypt-dev \
         libjpeg-turbo-dev \
         libpng-dev \
+        libxslt-dev \
         libzip-dev \
         postgresql-dev \
     ; \
@@ -37,6 +39,7 @@ RUN set -ex; \
         gd \
         intl \
         pdo_pgsql \
+        xsl \
         zip \
     ; \
     \
@@ -46,7 +49,7 @@ RUN set -ex; \
             | sort -u \
             | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
     )"; \
-    apk add --virtual .symfony-php-ext $runDeps; \
+    apk add --virtual .php-ext $runDeps; \
     apk del .build-deps
 
 # Configure PHP
