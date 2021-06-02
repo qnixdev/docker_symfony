@@ -9,6 +9,7 @@
 * [Symfony CLI](https://symfony.com/)
 * [Postgres](https://www.postgresql.org/)
 * [Redis](https://redis.io/)
+* [Node.js](https://nodejs.org/)
 
 ## Previous requirements
 
@@ -32,8 +33,9 @@ This stack needs [docker](https://www.docker.com/) and [docker-compose](https://
 
 We have the following *docker-compose* build image:
 
+* `proxy`: The proxy server container for pretty domain names;
 * `nginx`: The Nginx webserver container in which the application volume is mounted;
-* `nginx-proxy`: The proxy server container for pretty domain names;
 * `app`: The PHP container in which the application volume is mounted;
 * `postgres`: The Postgres database container;
-* `redis`: The Redis server container.
+* `redis`: The Redis server container;
+* `node`: The Node.js server container.
