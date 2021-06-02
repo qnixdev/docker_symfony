@@ -19,10 +19,10 @@ This stack needs [docker](https://www.docker.com/) and [docker-compose](https://
 
 1. Clone this repository
 2. Modify configuration in the *.env* file
-3. Create new or copy your project in */app* dir
-4. Run docker-compose:
+3. Create new or copy your project in *app/* dir
+4. Run make command:
    ```sh
-   docker-compose up -d --build
+   make init
    ```
 5. Don't forget add your domain-name to */etc/hosts*. For example:
    ```sh
@@ -39,3 +39,10 @@ We have the following *docker-compose* build image:
 * `postgres`: The Postgres database container;
 * `redis`: The Redis server container;
 * `node`: The Node.js server container.
+
+## Makefile
+
+To see all make commands run:
+   ```sh
+   make help
+   ```
