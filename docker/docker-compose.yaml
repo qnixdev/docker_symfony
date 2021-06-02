@@ -3,35 +3,32 @@ version: "3.8"
 services:
 
     # Nginx-proxy service
-    nginx-proxy:
-        container_name: nginx-proxy
+    proxy:
+        container_name: symfony-proxy
         image: jwilder/nginx-proxy
         ports:
             - "80:80"
-        networks:
-            - reverse-proxy
         volumes:
             - /var/run/docker.sock:/tmp/docker.sock:ro
+        networks:
+            - reverse_proxy
         restart: unless-stopped
 
     # Nginx service
     nginx:
-        container_name: nginx
+        container_name: symfony-nginx
         build:
-            context: ./docker/nginx
+            context: ./nginx
             args:
                 NGINX_VERSION: ${NGINX_VERSION}
                 DOMAIN_NAME: ${DOMAIN_NAME}
         volumes:
-            - ./app/public:/app
-            - ./logs/nginx:/var/log/nginx
-        env_file:
-            - .env
+            - ../app/public:/app
         depends_on:
-            - php-fpm
+            - php
         networks:
-            reverse-proxy:
-            symfony-app:
+            reverse_proxy:
+            symfony_app:
             main:
                 aliases:
                     - ${DOMAIN_NAME}
@@ -39,56 +36,54 @@ services:
             - VIRTUAL_HOST=${DOMAIN_NAME}
         restart: unless-stopped
 
-    # PHP service
-    php-fpm:
-        container_name: app
+    # PHP-FPM service
+    php:
+        container_name: symfony-app
         build:
-            context: ./docker/php
+            context: ./php
             args:
                 PHP_VERSION: ${PHP_VERSION}
                 USER_APP: ${USER_APP}
                 GROUP_APP: ${GROUP_APP}
                 UID: ${UID}
                 GID: ${GID}
-        user: 1000:1000
+        user: ${UID}:${GID}
         volumes:
-            - ./app:/app
-        working_dir: /app
-        env_file:
-            - .env
+            - ../app/:/app
         depends_on:
             - postgres
             - redis
         networks:
-            - symfony-app
+            - symfony_app
         restart: unless-stopped
 
     # Postgres service
     postgres:
-        container_name: postgres
-        image: postgres:${POSTGRES_VERSION}-alpine
+        container_name: symfony-postgres
+        image: postgres:${POSTGRES_VERSION}
         environment:
             POSTGRES_USER: ${POSTGRES_USER}
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
             POSTGRES_DB: ${POSTGRES_DB}
         ports:
             - "49153:5432"
+        user: ${UID}:${GID}
         volumes:
-            - ./data/postgres:/var/lib/postgresql/data
+            - ../data/postgres:/var/lib/postgresql/data
         networks:
-            - symfony-app
+            - symfony_app
         restart: unless-stopped
 
     # Redis service
     redis:
-        container_name: redis
+        container_name: symfony-redis
         image: redis:${REDIS_VERSION}-alpine
         ports:
             - "49154:6379"
         volumes:
-            - ./data/redis:/data
+            - ../data/redis:/data
         networks:
-            - symfony-app
+            - symfony_app
         restart: unless-stopped
         command:
             - "redis-server"
@@ -101,10 +96,26 @@ services:
             - "--maxmemory-policy ${REDIS_POLICY}"
             - "--requirepass ${REDIS_PASS}"
 
+    # Node service
+    node:
+        container_name: symfony-node
+        image: node:${NODE_VERSION}-alpine
+        user: ${UID}:${GID}
+        volumes:
+            - ../app/:/app
+        depends_on:
+            - php
+        working_dir: /app
+        networks:
+            - symfony_app
+        restart: unless-stopped
+        command: >
+            /bin/sh -c "yarn && yarn watch"
+
 # Docker Networks
 networks:
-    reverse-proxy:
-    symfony-app:
+    reverse_proxy:
+    symfony_app:
         driver: bridge
     main:
         driver: bridge
