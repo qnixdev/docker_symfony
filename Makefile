@@ -24,16 +24,16 @@ help:
 init:
 	-@mkdir data
 	-@mkdir data/postgres
-	@docker-compose --env-file ./docker/.env up -d --build
+	@docker-compose -f ./docker/docker-compose.yaml --env-file ./docker/.env up -d --build
 
 up:
-	@docker-compose --env-file ./docker/.env up -d
+	@docker-compose -f ./docker/docker-compose.yaml --env-file ./docker/.env up -d
 
 down:
-	@docker-compose --env-file ./docker/.env stop
+	@docker-compose -f ./docker/docker-compose.yaml --env-file ./docker/.env stop
 
 log:
-	@docker-compose --env-file ./docker/.env logs -f
+	@docker-compose -f ./docker/docker-compose.yaml --env-file ./docker/.env logs -f
 
 clean:
 	-@docker rm $$(docker stop symfony-proxy)
@@ -63,7 +63,7 @@ yarn-build:
 	@docker exec -u 1000 -it $(docker_node) yarn build
 
 cache-clean:
-	@rm -rf ./var/cache/
+	@rm -rf ./app/var/cache/
 
 enter-app:
 	@docker exec -it $(docker_php) bash
