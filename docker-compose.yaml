@@ -3,29 +3,31 @@ version: "3.8"
 services:
 
     # Nginx-proxy service
-    proxy:
+    app-proxy:
         container_name: symfony-proxy
         image: jwilder/nginx-proxy
         ports:
             - "80:80"
         volumes:
             - /var/run/docker.sock:/tmp/docker.sock:ro
+        depends_on:
+            - app-php
         networks:
             - reverse_proxy
         restart: unless-stopped
 
     # Nginx service
-    nginx:
+    app-nginx:
         container_name: symfony-nginx
         build:
-            context: ./nginx
+            context: ./docker/nginx
             args:
                 NGINX_VERSION: ${NGINX_VERSION}
                 DOMAIN_NAME: ${DOMAIN_NAME}
         volumes:
-            - ../app/public:/app
+            - ./app/public:/app
         depends_on:
-            - php
+            - app-php
         networks:
             reverse_proxy:
             symfony_app:
@@ -37,10 +39,10 @@ services:
         restart: unless-stopped
 
     # PHP-FPM service
-    php:
+    app-php:
         container_name: symfony-app
         build:
-            context: ./php
+            context: ./docker/php
             args:
                 PHP_VERSION: ${PHP_VERSION}
                 USER_APP: ${USER_APP}
@@ -49,16 +51,16 @@ services:
                 GID: ${GID}
         user: ${UID}:${GID}
         volumes:
-            - ../app/:/app
+            - ./app:/app
         depends_on:
-            - postgres
-            - redis
+            - app-postgres
+            - app-redis
         networks:
             - symfony_app
         restart: unless-stopped
 
     # Postgres service
-    postgres:
+    app-postgres:
         container_name: symfony-postgres
         image: postgres:${POSTGRES_VERSION}
         environment:
@@ -69,19 +71,19 @@ services:
             - "49153:5432"
         user: ${UID}:${GID}
         volumes:
-            - ../data/postgres:/var/lib/postgresql/data
+            - ./data/postgres:/var/lib/postgresql/data
         networks:
             - symfony_app
         restart: unless-stopped
 
     # Redis service
-    redis:
+    app-redis:
         container_name: symfony-redis
         image: redis:${REDIS_VERSION}-alpine
         ports:
             - "49154:6379"
         volumes:
-            - ../data/redis:/data
+            - ./data/redis:/data
         networks:
             - symfony_app
         restart: unless-stopped
@@ -97,14 +99,14 @@ services:
             - "--requirepass ${REDIS_PASS}"
 
     # Node service
-    node:
+    app-node:
         container_name: symfony-node
         image: node:${NODE_VERSION}-alpine
         user: ${UID}:${GID}
         volumes:
-            - ../app/:/app
+            - ./app:/app
         depends_on:
-            - php
+            - app-php
         working_dir: /app
         networks:
             - symfony_app
