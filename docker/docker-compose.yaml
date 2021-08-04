@@ -76,44 +76,6 @@ services:
             - symfony_app
         restart: unless-stopped
 
-    # Redis service
-    app-redis:
-        container_name: symfony-redis
-        image: redis:${REDIS_VERSION}-alpine
-        ports:
-            - "49154:6379"
-        volumes:
-            - ../data/redis:/data
-        networks:
-            - symfony_app
-        restart: unless-stopped
-        command:
-            - "redis-server"
-            - "--loglevel ${REDIS_LOGLEVEL}"
-            - "--databases 2"
-            - "--save 900 1"
-            - "--save 300 10"
-            - "--save 60 10000"
-            - "--maxmemory ${REDIS_MAXMEM}"
-            - "--maxmemory-policy ${REDIS_POLICY}"
-            - "--requirepass ${REDIS_PASS}"
-
-    # Node service
-    app-node:
-        container_name: symfony-node
-        image: node:${NODE_VERSION}-alpine
-        user: ${UID}:${GID}
-        volumes:
-            - ../app:/app
-        depends_on:
-            - app-php
-        working_dir: /app
-        networks:
-            - symfony_app
-        restart: unless-stopped
-        command: >
-            /bin/sh -c "yarn && yarn watch"
-
 # Docker Networks
 networks:
     reverse_proxy:

@@ -14,6 +14,7 @@ RUN set -ex; \
 	apk add --no-cache --virtual .build-deps \
 		curl-dev \
 		freetype-dev \
+		icu-dev \
 		libgcrypt-dev \
 		libjpeg-turbo-dev \
 		libpng-dev \
