@@ -54,7 +54,6 @@ services:
             - ../app:/app
         depends_on:
             - app-postgres
-            - app-redis
         networks:
             - symfony_app
         restart: unless-stopped
