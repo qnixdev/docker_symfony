@@ -3,29 +3,61 @@ ARG PHP_VERSION
 
 FROM php:${PHP_VERSION}-fpm-alpine3.14
 
-LABEL author = 'Mykola Vyhivskyi <qnixdev@gmail.com>'
-LABEL version = '1.0'
-LABEL description = 'This image contains PHP modules and configurations to run project'
+LABEL maintainer="Mykola Vyhivskyi <qnixdev@gmail.com>" \
+      version="1.0"
 
 # Install packets
 RUN set -ex; \
     \
-    apk update \
-    && apk upgrade \
-    && apk add --no-cache \
+    apk upgrade --update && apk add --no-cache \
         bash \
-    ;
-
-# Install PHP extensions
-RUN curl -sSLf -o /usr/local/bin/install-php-extensions https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
-    && chmod +x /usr/local/bin/install-php-extensions \
-    && install-php-extensions \
+    ; \
+    \
+    # Install libraries
+    apk add --no-cache --virtual .build-deps \
+        icu-dev \
+        imagemagick-dev \
+        libxslt-dev \
+        libzip-dev \
+        postgresql-dev \
+        rabbitmq-c-dev \
+    ; \
+    \
+    # Add amqp & imagick support
+    docker-php-source extract \
+    && mkdir /usr/src/php/ext/amqp \
+    && curl -L https://github.com/php-amqp/php-amqp/archive/master.tar.gz | tar -xzC /usr/src/php/ext/amqp --strip-components=1 \
+    && mkdir /usr/src/php/ext/imagick \
+    && curl -L https://github.com/imagick/imagick/archive/master.tar.gz | tar -xzC /usr/src/php/ext/imagick --strip-components=1 \
+    ; \
+    \
+    # Add postgres support
+    docker-php-ext-configure pgsql \
+        -with-pgsql=/usr/local/pgsql \
+    ; \
+    \
+    # Install PHP compiled extensions
+    docker-php-ext-install -j "$(nproc)" \
         amqp \
-        gd \
+        imagick \
         intl \
         pdo_pgsql \
         xsl \
-        zip
+        zip \
+    ; \
+    \
+    # Delete PHP source
+    docker-php-source delete \
+    ; \
+    \
+    runDeps="$( \
+        scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
+            | tr ',' '\n' \
+            | sort -u \
+            | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+    )"; \
+    apk add --virtual .php-ext $runDeps; \
+    apk del .build-deps
 
 # Configure PHP
 RUN { \
