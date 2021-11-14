@@ -10,7 +10,7 @@ COPY domain.conf /etc/nginx/conf.d/default.conf
 # Set domain name
 ARG DOMAIN_NAME
 
-RUN sed "/server_name symfony.local;/c\    server_name ${DOMAIN_NAME};" -i /etc/nginx/conf.d/default.conf
+RUN sed "/server_name localhost;/c\    server_name ${DOMAIN_NAME};" -i /etc/nginx/conf.d/default.conf
 
 # Set workdir
 WORKDIR /app

@@ -1,84 +1,95 @@
-version: "3.8"
+version: '3.9'
 
 services:
-
     # Nginx-proxy service
-    app-proxy:
+    proxy-service:
         container_name: symfony-proxy
         image: jwilder/nginx-proxy
         ports:
-            - "80:80"
+            - '80:80'
         volumes:
             - /var/run/docker.sock:/tmp/docker.sock:ro
         depends_on:
-            - app-php
+            - php-service
         networks:
             - reverse_proxy
-        restart: unless-stopped
 
     # Nginx service
-    app-nginx:
+    nginx-service:
         container_name: symfony-nginx
         build:
-            context: ./nginx
+            context: ./image/nginx
             args:
                 NGINX_VERSION: ${NGINX_VERSION}
                 DOMAIN_NAME: ${DOMAIN_NAME}
-        volumes:
-            - ../app/public:/app
+        environment:
+            - VIRTUAL_HOST=${DOMAIN_NAME}
         depends_on:
-            - app-php
+            - php-service
+        volumes:
+            - ../public:/app
         networks:
             reverse_proxy:
-            symfony_app:
+            project_net:
             main:
                 aliases:
                     - ${DOMAIN_NAME}
-        environment:
-            - VIRTUAL_HOST=${DOMAIN_NAME}
-        restart: unless-stopped
 
     # PHP-FPM service
-    app-php:
+    php-service:
         container_name: symfony-app
         build:
-            context: ./php
+            context: ./image/php
             args:
                 PHP_VERSION: ${PHP_VERSION}
                 USER_APP: ${USER_APP}
                 GROUP_APP: ${GROUP_APP}
                 UID: ${UID}
                 GID: ${GID}
+        depends_on:
+            - database-service
+            - rabbitmq-service
         user: ${UID}:${GID}
         volumes:
-            - ../app:/app
-        depends_on:
-            - app-postgres
+            - ../:/app
         networks:
-            - symfony_app
-        restart: unless-stopped
+            - project_net
 
     # Postgres service
-    app-postgres:
+    database-service:
         container_name: symfony-postgres
         image: postgres:${POSTGRES_VERSION}
         environment:
             POSTGRES_USER: ${POSTGRES_USER}
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
             POSTGRES_DB: ${POSTGRES_DB}
-        ports:
-            - "49153:5432"
         user: ${UID}:${GID}
         volumes:
-            - ../data/postgres:/var/lib/postgresql/data
+            - ./data/postgres:/var/lib/postgresql/data
+        ports:
+            - '49153:5432'
         networks:
-            - symfony_app
-        restart: unless-stopped
+            - project_net
 
-# Docker Networks
+    # RabbitMQ service
+    rabbitmq-service:
+        container_name: symfony-rabbitmq
+        image: heidiks/rabbitmq-delayed-message-exchange:latest
+        environment:
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+        user: ${UID}:${GID}
+        volumes:
+            - ./data/rabbitmq:/var/lib/rabbitmq
+        ports:
+            - '49154:15672'
+        networks:
+            - project_net
+
+# Docker networks
 networks:
     reverse_proxy:
-    symfony_app:
+    project_net:
         driver: bridge
     main:
         driver: bridge
