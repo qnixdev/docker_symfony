@@ -5,7 +5,7 @@ help:
 	@echo "usage: make COMMAND"
 	@echo ""
 	@echo "Commands:"
-	@echo "  init                Create libs & load/create containers"
+	@echo "  init                Create libs & containers"
 	@echo "  up                  Up containers"
 	@echo "  down                Stop containers"
 	@echo "  log                 Watch logs"
@@ -19,17 +19,17 @@ help:
 	@echo "  composer-u          Update composer require"
 
 init:
-	-@mkdir -p { .docker/data/postgres .docker/data/rabbitmq }
-	@docker-compose -f ./.docker/docker-compose.yaml --env-file ./.docker/.env up -d --build
+	-@mkdir -p .docker/data/postgres .docker/data/rabbitmq
+	@docker-compose -f .docker/docker-compose.yaml --env-file .docker/.env up -d --build
 
 up:
-	@docker-compose -f ./.docker/docker-compose.yaml --env-file ./.docker/.env up -d
+	@docker-compose -f .docker/docker-compose.yaml --env-file .docker/.env up -d
 
 down:
-	@docker-compose -f ./.docker/docker-compose.yaml --env-file ./.docker/.env stop
+	@docker-compose -f .docker/docker-compose.yaml --env-file .docker/.env stop
 
 log:
-	@docker-compose -f ./.docker/docker-compose.yaml --env-file ./.docker/.env logs -f
+	@docker-compose -f .docker/docker-compose.yaml --env-file .docker/.env logs -f
 
 enter:
 	@docker exec -it $(docker_php) sh
@@ -49,10 +49,10 @@ rmi:
 	@docker rmi $$(docker images -aq)
 
 cache-clean:
-	@rm -rf ./var/cache/
+	@rm -rf var/cache/
 
 data-clean:
-	@rm -rf ./.docker/data
+	@rm -rf .docker/data
 
 composer-i:
 	@docker exec -it -u 1000:1000 $(docker_php) composer i
